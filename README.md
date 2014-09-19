@@ -1,0 +1,4 @@
+cinnamon
+========
+
+Theme for avocado
