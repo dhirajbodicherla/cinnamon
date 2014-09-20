@@ -23,8 +23,6 @@
     "128": "icon128.png"
   },
   "permissions": [
-    "https://avocado.io/",
-    "tabs",
-    "activeTab"
+    "tabs"
   ]
 }

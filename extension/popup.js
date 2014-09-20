@@ -2,21 +2,22 @@ $ = document.getElementById.bind(document);
 
 var imagesContainer = document.querySelector('#images');
 var image = document.querySelector('#images img');
-var limit = 9;
+var closingEl = document.querySelector('.close');
+var moreButton = document.querySelector('.more');
+var firstElement = $('#first')
+var limit = 20;
 var min = 0;
 var max = limit;
+var media;
 var SIGNATURE_RE = /var\s+apiSignature\s+=\s+"(.+)";/m;
 
-var closingElements = document.querySelectorAll('.close');
-for (var i = 0, closingEl; closingEl = closingElements[i]; i++) {
-    closingEl.addEventListener('click', closePopup);
-}
 
-if (window.devicePixelRatio >= 1.5) {
-    document.body.classList.add('retina');
-}
+closingEl.addEventListener('click', closePopup);
 
-getSignature();
+
+checkLogin(function() {
+    moreButton.onclick = addImages.bind(this, media);
+});
 
 
 function handleImageClick(media, e) {
@@ -33,7 +34,7 @@ function closePopup() {
     window.close();
 }
 
-function getSignature(callback) {
+function checkLogin(callback) {
     var xhr = new XMLHttpRequest();
     xhr.onload = function() {
         var match = SIGNATURE_RE.exec(xhr.responseText);
@@ -51,7 +52,9 @@ function getSignature(callback) {
 
         var xhrGetImages = new XMLHttpRequest();
         xhrGetImages.onload = function() {
-            addImages(JSON.parse(this.responseText));
+            media = JSON.parse(this.responseText);
+            addImages(media);
+            callback();
         };
         xhrGetImages.onerror = function() {
             setStatus('Failure: ' + xhrGetImages.responseText);
@@ -74,12 +77,34 @@ function getSignature(callback) {
 
 function addImages(data) {
     for (var i = min; i < limit; i++) {
+        var div = document.createElement('div');
         var image = document.createElement('img');
         image.setAttribute('src', data[i].imageUrls.tiny);
         image.setAttribute('id', i);
-        imagesContainer.appendChild(image);
+        var aspectRatio = data[i].info.aspectRatio;
+        var width, height;
+        if(aspectRatio > 1){
+            width = 120;
+            height = parseInt(120 / aspectRatio, 10);
+        } else {
+            height = 120;
+            width = parseInt(120 * aspectRatio, 10);
+        }
+        image.width = width;
+        image.height = height;
+        div.appendChild(image);
+        if(aspectRatio > 1){
+            imagesContainer.appendChild(div);
+        }else{
+            imagesContainer.insertBefore(div, first);
+            // imagesContainer.appendChild(div);
+        }
+        
         image.onclick = handleImageClick.bind(this,data);
     }
+    imagesContainer.appendChild(imagesContainer.removeChild(first));
+    min = limit;
+    limit = limit * 2;
 }
 
 function setStatus(message, opt_subMessage) {
