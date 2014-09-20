@@ -16,15 +16,16 @@ if (window.devicePixelRatio >= 1.5) {
     document.body.classList.add('retina');
 }
 
-getSignature(function(signature) {
-
-});
+getSignature();
 
 
 function handleImageClick(media, e) {
     if (e.target.nodeName === 'IMG') {
         window.localStorage.setItem('imageSelected', media[e.target.id].imageUrls.large);
         e.target.className += e.target.className ? ' selected' : 'selected';
+        chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+            chrome.tabs.sendMessage(tabs[0].id, { method: "refresh", url: media[e.target.id].imageUrls.large}, function(response) {});
+        });
     }
 }
 
@@ -62,8 +63,6 @@ function getSignature(callback) {
             true);
         xhrGetImages.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
         xhrGetImages.send();
-
-        callback(match[1]);
 
     };
     xhr.onerror = function() {
